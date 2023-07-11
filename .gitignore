@@ -1,1 +1,4 @@
 .idea/*
+*.mp3
+*.info.json
+requirements.txt
