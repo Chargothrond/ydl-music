@@ -18,25 +18,30 @@ def process_single_video(vid: str, custom_chapters: Optional[list[dict]] = None)
     logger.info(f"Download {yt_url}")
 
     with tempfile.TemporaryDirectory() as tmp_dir:
-        target = rf"{tmp_dir}\%(title)s.%(ext)s"
+        tmp_path = Path(tmp_dir)
+        tf = "tmp_file"
+        target = rf"{tmp_path}\{tf}.%(ext)s"
         cmd = f'youtube-dl {yt_url} -o "{target}" -x --audio-format mp3 --audio-quality 192K --write-info-json'
         # wanted to use the Python interface directly, but getting info_dict is more cumbersome than with the CLI
         subprocess.run(cmd, shell=True)
         logger.info(f"Finished downloading {yt_url}")
-        # there will be just one such file thanks to the temporary directory
-        info_json = [fp for fp in Path(tmp_dir).iterdir() if fp.suffixes == [".info", ".json"]][0]
-        vid_info = utils.get_json_info(info_json)
+        mp3_inp = tmp_path / f"{tf}.mp3"
+        vid_info = utils.get_json_info(tmp_path / f"{tf}.info.json")
         band, album, year = utils.parse_title(vid_info["title"])
         chapters = utils.get_chapters(vid_info, custom_chapters)
         if len(chapters) == 1:
-            # TODO: Copy single file and rename + set metadata
+            # TODO: rename / copy track to target, (set track number) and other metadata
             print("todo")
         else:
-            # TODO: use ffmpeg CLI to split chapters into tracks, copy over + set metadata
-            print("todo")
-        logger.info("Done")
-
-    # "chapters" keys: {"start_time": 0.0, "end_time": 276.0, "title": "Track 01"}
+            for chapter in chapters:
+                st = chapter["start_time"]
+                et = chapter["end_time"]
+                track = chapter["title"]
+                tmp_track = tmp_path / "tmp_track.mp3"
+                cmd = f"ffmpeg -i {mp3_inp} -ss {st} -to {et} -c copy {tmp_track}"
+                subprocess.run(cmd, shell=True)
+                # TODO: rename / copy track to target, set track number and other metadata
+    logger.info("Done")
 
 
 if __name__ == "__main__":
