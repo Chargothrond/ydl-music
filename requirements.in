@@ -1,2 +1,6 @@
 pip-tools
 youtube_dl
+isort
+black
+flake8
+mypy
