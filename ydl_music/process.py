@@ -11,6 +11,7 @@ import youtube_dl  # noqa (its CLI is called via subprocess)
 from ydl_music import utils
 
 logger = logging.getLogger(__name__)
+_ROOT = "D:/Musik"
 
 
 def process_single_video(vid: str, custom_chapters: Optional[list[dict]] = None) -> None:
@@ -28,19 +29,31 @@ def process_single_video(vid: str, custom_chapters: Optional[list[dict]] = None)
         mp3_inp = tmp_path / f"{tf}.mp3"
         vid_info = utils.get_json_info(tmp_path / f"{tf}.info.json")
         band, album, year = utils.parse_title(vid_info["title"])
+
+        band_folder = Path(_ROOT) / band
+        utils.add_folder_if_needed(band_folder)
+        album_folder = band_folder / album
+        utils.add_folder_if_needed(album_folder)
         chapters = utils.get_chapters(vid_info, custom_chapters)
+        ffmpeg_opts = "-hide_banner -loglevel warning"
         if len(chapters) == 1:
-            # TODO: rename / copy track to target, (set track number) and other metadata
-            print("todo")
+            md = utils.prep_md_string(album, band, album, "01", year)
+            target_mp3 = utils.get_target_path(album_folder, f"01 {album}")
+            cmd = f'ffmpeg -i {mp3_inp} {md} -codec copy "{target_mp3}" {ffmpeg_opts}'
+            subprocess.run(cmd, shell=True)
         else:
-            for chapter in chapters:
+            for idx, chapter in enumerate(chapters):
+                idx = idx + 1
                 st = chapter["start_time"]
                 et = chapter["end_time"]
-                track = chapter["title"]
-                tmp_track = tmp_path / "tmp_track.mp3"
-                cmd = f"ffmpeg -i {mp3_inp} -ss {st} -to {et} -c copy {tmp_track}"
+                title = chapter["title"]
+                # TODO: automate this more. occurred patterns (so far): "1. title", "01. title", "01 title"
+                title = title.replace(f"0{idx}. ", "")
+                track = f"0{idx}" if idx < 10 else f"{idx}"  # this should never go above 99
+                target_mp3 = utils.get_target_path(album_folder, f"{track} {title}")
+                md = utils.prep_md_string(title, band, album, track, year)
+                cmd = f'ffmpeg -i {mp3_inp} {md} -ss {st} -to {et} -codec copy "{target_mp3}" {ffmpeg_opts}'
                 subprocess.run(cmd, shell=True)
-                # TODO: rename / copy track to target, set track number and other metadata
     logger.info("Done")
 
 
@@ -52,4 +65,7 @@ if __name__ == "__main__":
     formatter = logging.Formatter("%(asctime)s: [%(levelname)s] [%(name)s] %(message)s", "%Y-%m-%d %H:%M:%S")
     handler.setFormatter(formatter)
     root.addHandler(handler)
-    process_single_video("1vgDD9BIXo8")  # 7ZyDQYcz_Vo
+    # process_single_video("7ZyDQYcz_Vo")  # 2min test video (not fitting expected structure)
+    # process_single_video("1vgDD9BIXo8")  # 12min test video, but longer test video fitting target structure
+    # process_single_video("VxQBM6e94I4")  # 26min text video, album with just one song and no chapters
+    process_single_video("kaHq5xM4i_s")
