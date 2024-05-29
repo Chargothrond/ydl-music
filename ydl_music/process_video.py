@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 _ROOT = "D:/Musik"
 
 
-def process_single_video(vid: str, custom_chapters: Optional[list[dict]] = None) -> None:
+def process_video(vid: str, custom_chapters: Optional[list[dict]] = None) -> None:
     yt_url = f"https://youtu.be/{vid}"
 
     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -56,4 +56,4 @@ if __name__ == "__main__":
     formatter = logging.Formatter("%(asctime)s: [%(levelname)s] [%(name)s] %(message)s", "%Y-%m-%d %H:%M:%S")
     handler.setFormatter(formatter)
     root.addHandler(handler)
-    process_single_video("2fFzjLYEj50")
+    process_video("2fFzjLYEj50")
