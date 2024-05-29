@@ -38,12 +38,11 @@ def process_video(vid: str, custom_chapters: Optional[list[dict]] = None) -> Non
         if len(chapters) == 1:
             utils.copy_track_with_md(mp3_inp, album_dir, band, album, album, "01", year)
         else:
-            for idx, chapter in enumerate(chapters):
-                idx = idx + 1
-                title = utils.remove_title_prefixes(chapter["title"], idx)
+            chapters = utils.remove_title_prefixes(chapters)
+            for idx, chapter in enumerate(chapters, start=1):
                 # this should never go into 3 digits and 001 would look stranger than 01
                 track = f"0{idx}" if idx < 10 else f"{idx}"
-                utils.copy_track_with_md(mp3_inp, album_dir, band, album, title, track, year, chapter)
+                utils.copy_track_with_md(mp3_inp, album_dir, band, album, chapter["title"], track, year, chapter)
 
     logger.info("Done")
 
@@ -56,4 +55,4 @@ if __name__ == "__main__":
     formatter = logging.Formatter("%(asctime)s: [%(levelname)s] [%(name)s] %(message)s", "%Y-%m-%d %H:%M:%S")
     handler.setFormatter(formatter)
     root.addHandler(handler)
-    process_video("2fFzjLYEj50")
+    process_video("Yxejzw9gQlQ")

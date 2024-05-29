@@ -60,10 +60,14 @@ def get_chapters(vid_info: dict) -> list[dict]:
     return vid_info["chapters"]
 
 
-def remove_title_prefixes(title: str, idx: int) -> str:
-    # TODO: automate this more. occurred patterns (so far): "1. title", "01. title", "01 title"
-    # title = title.replace(f"0{idx}. ", "")
-    return title
+def remove_title_prefixes(chapters: list[dict]) -> list[dict]:
+    # assume the prefix pattern can be derived from the first track for now
+    # TODO: implement safer check and removal of occurred patterns: "1. title", "01. title", "01 title"
+    title_01 = chapters[0]["title"]
+    for idx, chapter in enumerate(chapters, start=1):
+        # chapter["title"] = re.sub(r"^0?[0-9]{1,2}\.? ", "", chapter["title"])
+        chapters[idx - 1] = chapter
+    return chapters
 
 
 def copy_track_with_md(
@@ -91,7 +95,8 @@ def copy_track_with_md(
         ]
     )
     segment = f'-ss {chapter["start_time"]} -to {chapter["end_time"]}' if chapter else ""
-    target_mp3 = out_dir / f"{track} {title}.mp3"
+    fp_save_title = re.sub(r"[^\w\s-]", "_", title)
+    target_mp3 = out_dir / f"{track} {fp_save_title}.mp3"
     if target_mp3.exists():
         raise FileExistsError(f"{target_mp3} already exists!")
     cmd = f'ffmpeg -i {mp3_inp} {md} {segment} -codec copy "{target_mp3}" {_DEFAULTS["ffmpeg_opts"]}'
