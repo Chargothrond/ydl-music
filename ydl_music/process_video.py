@@ -14,13 +14,15 @@ logger = logging.getLogger(__name__)
 _ROOT = "D:/Musik"
 
 
-def process_video(vid: str, custom_chapters: Optional[list[dict]] = None) -> None:
+def process_video(
+    vid: str, force_custom_title: Optional[bool] = False, custom_chapters: Optional[list[dict]] = None
+) -> None:
     yt_url = f"https://youtu.be/{vid}"
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         logger.info(f"Download {yt_url}")
         mp3_inp, vid_info = utils.download_video(yt_url, tmp_dir)
-        band, album, year = utils.parse_title(vid_info["title"])
+        band, album, year = utils.parse_title(vid_info["title"], force_custom_title=force_custom_title)
 
         if custom_chapters:
             logger.info("Using custom chapters instead of derived ones")
@@ -55,4 +57,4 @@ if __name__ == "__main__":
     formatter = logging.Formatter("%(asctime)s: [%(levelname)s] [%(name)s] %(message)s", "%Y-%m-%d %H:%M:%S")
     handler.setFormatter(formatter)
     root.addHandler(handler)
-    process_video("Yxejzw9gQlQ")
+    process_video("aaaaaaaaa")  # , force_custom_title=True
