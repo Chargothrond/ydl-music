@@ -4,7 +4,7 @@ import os
 import re
 import subprocess
 from pathlib import Path
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 
 logger = logging.getLogger(__name__)
 _DEFAULTS = {
@@ -66,7 +66,16 @@ def remove_title_prefixes(title: str, idx: int) -> str:
     return title
 
 
-def copy_track_with_md(mp3_inp: Path, out_dir: Path, band: str, album: str, title: str, track: str, year: str, chapter: Optional[dict] = None) -> None:
+def copy_track_with_md(
+    mp3_inp: Path,
+    out_dir: Path,
+    band: str,
+    album: str,
+    title: str,
+    track: str,
+    year: str,
+    chapter: Optional[dict] = None,
+) -> None:
     logger.info("Defining metadata and options for ffmpeg")
     md = "-metadata " + " -metadata ".join(
         [
