@@ -61,11 +61,10 @@ def get_chapters(vid_info: dict) -> list[dict]:
 
 
 def remove_title_prefixes(chapters: list[dict]) -> list[dict]:
-    # assume the prefix pattern can be derived from the first track for now
-    # TODO: implement safer check and removal of occurred patterns: "1. title", "01. title", "01 title"
-    title_01 = chapters[0]["title"]
     for idx, chapter in enumerate(chapters, start=1):
-        # chapter["title"] = re.sub(r"^0?[0-9]{1,2}\.? ", "", chapter["title"])
+        # TODO: this can be improved, but is tricky as many different conventions might exist
+        chapter["title"] = re.sub(rf"^0{idx}\.? ", "", chapter["title"])  # "01. title" and "01 title"
+        chapter["title"] = re.sub(rf"^{idx}\. ", "", chapter["title"])  # "1. title" (not "1 title" on purpose for now)
         chapters[idx - 1] = chapter
     return chapters
 
