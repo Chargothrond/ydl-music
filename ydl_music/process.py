@@ -1,5 +1,5 @@
 import logging
-import subprocess
+import os
 import sys
 import tempfile
 from pathlib import Path
@@ -16,44 +16,34 @@ _ROOT = "D:/Musik"
 
 def process_single_video(vid: str, custom_chapters: Optional[list[dict]] = None) -> None:
     yt_url = f"https://youtu.be/{vid}"
-    logger.info(f"Download {yt_url}")
 
     with tempfile.TemporaryDirectory() as tmp_dir:
-        tmp_path = Path(tmp_dir)
-        tf = "tmp_file"
-        target = rf"{tmp_path}\{tf}.%(ext)s"
-        cmd = f'youtube-dl {yt_url} -o "{target}" -x --audio-format mp3 --audio-quality 192K --write-info-json'
-        # wanted to use the Python interface directly, but getting info_dict is more cumbersome than with the CLI
-        subprocess.run(cmd, shell=True)
-        logger.info(f"Finished downloading {yt_url}")
-        mp3_inp = tmp_path / f"{tf}.mp3"
-        vid_info = utils.get_json_info(tmp_path / f"{tf}.info.json")
+        logger.info(f"Download {yt_url}")
+        mp3_inp, vid_info = utils.download_video(yt_url, tmp_dir)
         band, album, year = utils.parse_title(vid_info["title"])
 
-        band_folder = Path(_ROOT) / band
-        utils.add_folder_if_needed(band_folder)
-        album_folder = band_folder / album
-        utils.add_folder_if_needed(album_folder)
-        chapters = utils.get_chapters(vid_info, custom_chapters)
-        ffmpeg_opts = "-hide_banner -loglevel warning"
+        if custom_chapters:
+            logger.info("Using custom chapters instead of derived ones")
+            chapters = custom_chapters
+        else:
+            logger.info("Get chapters / track information")
+            chapters = utils.get_chapters(vid_info)
+
+        logger.info(f"Creating folders for band '{band}' and album '{album}'")
+        band_dir = utils.add_folder_if_needed(Path(_ROOT), band)
+        album_dir = utils.add_folder_if_needed(band_dir, album)
+        os.startfile(album_dir)
+
         if len(chapters) == 1:
-            md = utils.prep_md_string(album, band, album, "01", year)
-            target_mp3 = utils.get_target_path(album_folder, f"01 {album}")
-            cmd = f'ffmpeg -i {mp3_inp} {md} -codec copy "{target_mp3}" {ffmpeg_opts}'
-            subprocess.run(cmd, shell=True)
+            utils.copy_track_with_md(mp3_inp, album_dir, band, album, album, "01", year)
         else:
             for idx, chapter in enumerate(chapters):
                 idx = idx + 1
-                st = chapter["start_time"]
-                et = chapter["end_time"]
-                title = chapter["title"]
-                # TODO: automate this more. occurred patterns (so far): "1. title", "01. title", "01 title"
-                title = title.replace(f"0{idx}. ", "")
-                track = f"0{idx}" if idx < 10 else f"{idx}"  # this should never go above 99
-                target_mp3 = utils.get_target_path(album_folder, f"{track} {title}")
-                md = utils.prep_md_string(title, band, album, track, year)
-                cmd = f'ffmpeg -i {mp3_inp} {md} -ss {st} -to {et} -codec copy "{target_mp3}" {ffmpeg_opts}'
-                subprocess.run(cmd, shell=True)
+                title = utils.remove_title_prefixes(chapter["title"], idx)
+                # this should never go into 3 digits and 001 would look stranger than 01
+                track = f"0{idx}" if idx < 10 else f"{idx}"
+                utils.copy_track_with_md(mp3_inp, album_dir, band, album, title, track, year, chapter)
+    # store info in log?
     logger.info("Done")
 
 
@@ -67,5 +57,5 @@ if __name__ == "__main__":
     root.addHandler(handler)
     # process_single_video("7ZyDQYcz_Vo")  # 2min test video (not fitting expected structure)
     # process_single_video("1vgDD9BIXo8")  # 12min test video, but longer test video fitting target structure
-    # process_single_video("VxQBM6e94I4")  # 26min text video, album with just one song and no chapters
-    process_single_video("kaHq5xM4i_s")
+    # process_single_video("VxQBM6e94I4")  # 26min test video, album with just one song and no chapters
+    process_single_video("2fFzjLYEj50")

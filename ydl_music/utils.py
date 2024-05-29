@@ -2,24 +2,33 @@ import json
 import logging
 import os
 import re
+import subprocess
 from pathlib import Path
-from typing import Optional, Sequence, Union
+from typing import Tuple, Optional
 
 logger = logging.getLogger(__name__)
 _DEFAULTS = {
     "info_keys": ["title", "description", "duration", "chapters"],
     "sep_band": r" - ",
     "sep_album": r" \(",
+    "ffmpeg_opts": r"-hide_banner -loglevel warning",
 }
 
 
-def get_json_info(json_fp: Path, keys_to_keep: Union[Sequence[str], None] = None) -> dict:
+def download_video(yt_url: str, tmp_dir: str) -> Tuple[Path, dict]:
+    tmp_path = Path(tmp_dir)
+    tf = "tmp_file"
+    target = rf"{tmp_path}\{tf}.%(ext)s"
+    # wanted to use the Python interface directly, but getting info_dict is more cumbersome than with the CLI
+    cmd = f'youtube-dl {yt_url} -o "{target}" -x --audio-format mp3 --audio-quality 192K --write-info-json'
+    subprocess.run(cmd, shell=True)
+    logger.info(f"Finished downloading {yt_url}")
+    mp3_fp = tmp_path / f"{tf}.mp3"
+    json_fp = tmp_path / f"{tf}.info.json"
     logger.info(f"Get metadata information from {json_fp}")
-    if keys_to_keep is None:
-        keys_to_keep = _DEFAULTS["info_keys"]
     with open(json_fp) as jf:
-        info_dict = json.load(jf)
-    return {k: v for k, v in info_dict.items() if k in keys_to_keep}
+        info_dict = {k: v for k, v in json.load(jf).items() if k in _DEFAULTS["info_keys"]}
+    return mp3_fp, info_dict
 
 
 def parse_title(title: str) -> tuple[str, str, str]:
@@ -36,19 +45,30 @@ def parse_title(title: str) -> tuple[str, str, str]:
     return res[0]
 
 
-def get_chapters(vid_info: dict, custom_chapters: Optional[list[dict]] = None) -> list[dict]:
-    logger.info("Get chapters / track information")
-    if custom_chapters:
-        logger.info("Using custom chapters instead of derived ones")
-        return custom_chapters
+def add_folder_if_needed(root: Path, folder_name: str) -> Path:
+    dir_to_create = Path(root) / folder_name
+    if not dir_to_create.exists():
+        logger.info(f"There is no folder for band / album '{dir_to_create.parts[-1]}' yet, creating it")
+        os.mkdir(dir_to_create)
+    return dir_to_create
+
+
+def get_chapters(vid_info: dict) -> list[dict]:
     if "chapters" not in vid_info.keys():
         logger.warning("Video lacks chapters, check if just one track or if they need to be passed manually instead")
         return [{}]
     return vid_info["chapters"]
 
 
-def prep_md_string(title: str, band: str, album: str, track: str, year: str) -> str:
-    res = "-metadata " + " -metadata ".join(
+def remove_title_prefixes(title: str, idx: int) -> str:
+    # TODO: automate this more. occurred patterns (so far): "1. title", "01. title", "01 title"
+    # title = title.replace(f"0{idx}. ", "")
+    return title
+
+
+def copy_track_with_md(mp3_inp: Path, out_dir: Path, band: str, album: str, title: str, track: str, year: str, chapter: Optional[dict] = None) -> None:
+    logger.info("Defining metadata and options for ffmpeg")
+    md = "-metadata " + " -metadata ".join(
         [
             f'{k}="{v}"'
             for k, v in {
@@ -61,17 +81,11 @@ def prep_md_string(title: str, band: str, album: str, track: str, year: str) -> 
             }.items()
         ]
     )
-    return res
-
-
-def add_folder_if_needed(dir_to_create: Path):
-    if not dir_to_create.exists():
-        logger.info(f"There is no folder for band / album '{dir_to_create.parts[-1]}' yet, creating it")
-        os.mkdir(dir_to_create)
-
-
-def get_target_path(album_folder: Path, title: str) -> Path:
-    target_mp3 = album_folder / f"{title}.mp3"
+    segment = f'-ss {chapter["start_time"]} -to {chapter["end_time"]}' if chapter else ""
+    target_mp3 = out_dir / f"{track} {title}.mp3"
     if target_mp3.exists():
         raise FileExistsError(f"{target_mp3} already exists!")
-    return target_mp3
+    cmd = f'ffmpeg -i {mp3_inp} {md} {segment} -codec copy "{target_mp3}" {_DEFAULTS["ffmpeg_opts"]}'
+    logger.info(f"Running ffmpeg: {cmd}")
+    subprocess.run(cmd, shell=True)
+    logger.info(f"Finished saving track '{title}'")
