@@ -24,6 +24,7 @@ def process_single_video(vid: str, custom_chapters: Optional[list[dict]] = None)
 
         if custom_chapters:
             logger.info("Using custom chapters instead of derived ones")
+            # TODO: dq check structure (keys: "start_time", "end_time" and "title")
             chapters = custom_chapters
         else:
             logger.info("Get chapters / track information")
@@ -43,7 +44,7 @@ def process_single_video(vid: str, custom_chapters: Optional[list[dict]] = None)
                 # this should never go into 3 digits and 001 would look stranger than 01
                 track = f"0{idx}" if idx < 10 else f"{idx}"
                 utils.copy_track_with_md(mp3_inp, album_dir, band, album, title, track, year, chapter)
-    # store info in log?
+
     logger.info("Done")
 
 
@@ -55,7 +56,4 @@ if __name__ == "__main__":
     formatter = logging.Formatter("%(asctime)s: [%(levelname)s] [%(name)s] %(message)s", "%Y-%m-%d %H:%M:%S")
     handler.setFormatter(formatter)
     root.addHandler(handler)
-    # process_single_video("7ZyDQYcz_Vo")  # 2min test video (not fitting expected structure)
-    # process_single_video("1vgDD9BIXo8")  # 12min test video, but longer test video fitting target structure
-    # process_single_video("VxQBM6e94I4")  # 26min test video, album with just one song and no chapters
     process_single_video("2fFzjLYEj50")
