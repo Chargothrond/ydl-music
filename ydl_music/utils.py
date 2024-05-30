@@ -31,13 +31,12 @@ def download_video(yt_url: str, tmp_dir: str) -> Tuple[Path, dict]:
     return mp3_fp, info_dict
 
 
-def parse_title(title: str, force_custom_title: Optional[bool] = False) -> tuple[str, str, str]:
+def parse_title(title: str) -> tuple[str, str, str]:
     logger.info(f"Parse (band, album, year) from {title}")
     regex = r"^(.*)" + _DEFAULTS["sep_band"] + r"(.*)" + _DEFAULTS["sep_album"] + r".*([0-9]{4}).*$"  # type: ignore
     res = re.findall(regex, title)
-    if force_custom_title or len(res) == 0:
-        if len(res) == 0:
-            logger.warning(f"Could not match fields from regex '{regex}' for title '{title}', provide manually")
+    if len(res) == 0:
+        logger.warning(f"Could not match fields from regex '{regex}' for title '{title}', provide manually")
         title = input("Paste video title that can be parsed instead (i.e. matching expectation from regex): ")
         res = re.findall(regex, title)
         if len(res) == 0:
