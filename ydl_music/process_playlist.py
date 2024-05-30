@@ -1,20 +1,16 @@
 import logging
 import sys
-from pathlib import Path
-from typing import Optional
 
-from ydl_music import utils
 from ydl_music.process_video import process_video
 
 logger = logging.getLogger(__name__)
 _ROOT = "D:/Musik"
 
 
-def process_playlist(videos: dict[str, dict]) -> None:
+def process_playlist(videos: dict) -> None:
     for vid_id, vid_conf in videos.items():
         logger.info(f"Process video id '{vid_id}'")
         process_video(vid_id, **vid_conf)
-    pass
 
 
 if __name__ == "__main__":
