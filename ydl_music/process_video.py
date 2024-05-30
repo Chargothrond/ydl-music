@@ -5,18 +5,13 @@ import tempfile
 from pathlib import Path
 from typing import Optional
 
-# see https://github.com/ytdl-org/youtube-dl/#readme for youtube_dl usage
-import youtube_dl  # noqa (its CLI is called via subprocess)
-
 from ydl_music import utils
 
 logger = logging.getLogger(__name__)
 _ROOT = "D:/Musik"
 
 
-def process_video(
-    vid: str, custom_title: Optional[str] = None, custom_chapters: Optional[list[dict]] = None
-) -> None:
+def process_video(vid: str, custom_title: Optional[str] = None, custom_chapters: Optional[list[dict]] = None) -> None:
     yt_url = f"https://youtu.be/{vid}"
 
     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -26,7 +21,7 @@ def process_video(
 
         if custom_chapters:
             logger.info("Using custom chapters instead of derived ones")
-            # TODO: dq check structure (keys: "start_time", "end_time" and "title")
+            # consider DQ checking this in a dedicated function to read such information from a csv
             chapters = custom_chapters
         else:
             logger.info("Get chapters / track information")

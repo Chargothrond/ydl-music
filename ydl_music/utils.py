@@ -6,6 +6,9 @@ import subprocess
 from pathlib import Path
 from typing import Optional, Tuple
 
+# see https://github.com/ytdl-org/youtube-dl/#readme for youtube_dl usage
+import youtube_dl  # noqa (its CLI is called via subprocess)
+
 logger = logging.getLogger(__name__)
 _DEFAULTS = {
     "info_keys": ["title", "description", "duration", "chapters"],
@@ -62,9 +65,13 @@ def get_chapters(vid_info: dict) -> list[dict]:
 
 def remove_title_prefixes(chapters: list[dict]) -> list[dict]:
     for idx, chapter in enumerate(chapters, start=1):
-        # TODO: this can be improved, but is tricky as many different conventions might exist
-        chapter["title"] = re.sub(rf"^0{idx}\.? ", "", chapter["title"])  # "01. title" and "01 title"
-        chapter["title"] = re.sub(rf"^{idx}\. ", "", chapter["title"])  # "1. title" (not "1 title" on purpose for now)
+        # TODO: this can be improved, but is tricky as many different conventions exist
+        # "01. - title", "01 - title", "1. - title", "1 - title"
+        chapter["title"] = re.sub(rf"^0?{idx}\.? - ", "", chapter["title"])
+        # "01. title" and "01 title"
+        chapter["title"] = re.sub(rf"^0{idx}\.? ", "", chapter["title"])
+        # "1. title" (not "1 title" on purpose because sometimes song titles are just numbers)
+        chapter["title"] = re.sub(rf"^{idx}\. ", "", chapter["title"])
         chapters[idx - 1] = chapter
     return chapters
 
