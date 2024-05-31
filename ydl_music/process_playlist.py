@@ -24,12 +24,12 @@ if __name__ == "__main__":
     formatter = logging.Formatter("%(asctime)s: [%(levelname)s] [%(name)s] %(message)s", "%Y-%m-%d %H:%M:%S")
     handler.setFormatter(formatter)
     root.addHandler(handler)
-    # TODO: define input + logic to automate this (without custom chapters for now to keep a simple csv structure)
+    # TODO: define input + logic to automate this (without custom chapters initially)
     dummy_example = {
         "aaaaaaaaaaa": {"custom_title": "band - album (year)"},
         "bbbbbbbbbbb": {
             "custom_chapters": [
-                # or define this in another csv?
+                # TODO: custom chapers should be read from separate csv's (e.g. as f"{vid_id}_songs.csv")
                 {"start_time": 00, "end_time": 99, "title": "1"},
                 {"start_time": 100, "end_time": 666, "title": "2"},
             ]
