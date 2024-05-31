@@ -19,6 +19,7 @@ _DEFAULTS = {
 
 
 def download_video(yt_url: str, tmp_dir: str) -> Tuple[Path, dict]:
+    """Downloads a video using the `youtube-dl` CLI. Also downloads a json file containing relevant metadata."""
     tmp_path = Path(tmp_dir)
     tf = "tmp_file"
     target = rf"{tmp_path}\{tf}.%(ext)s"
@@ -35,6 +36,7 @@ def download_video(yt_url: str, tmp_dir: str) -> Tuple[Path, dict]:
 
 
 def parse_title(title: str) -> tuple[str, str, str]:
+    """Parse information from the video title. Expects format `band - album (year)`. Asks for manual input if needed."""
     logger.info(f"Parse (band, album, year) from {title}")
     regex = r"^(.*)" + _DEFAULTS["sep_band"] + r"(.*)" + _DEFAULTS["sep_album"] + r".*([0-9]{4}).*$"  # type: ignore
     res = re.findall(regex, title)
@@ -49,6 +51,7 @@ def parse_title(title: str) -> tuple[str, str, str]:
 
 
 def add_folder_if_needed(root: Path, folder_name: str) -> Path:
+    """Creates new folders per band or album if required."""
     dir_to_create = Path(root) / folder_name
     if not dir_to_create.exists():
         logger.info(f"There is no folder for band / album '{dir_to_create.parts[-1]}' yet, creating it")
@@ -57,15 +60,18 @@ def add_folder_if_needed(root: Path, folder_name: str) -> Path:
 
 
 def get_chapters(vid_info: dict) -> list[dict]:
+    """Gets chapter information from the video if it exists. Otherwise returns a list with one empty dictionary."""
     if "chapters" not in vid_info.keys():
         logger.warning("Video lacks chapters, check if just one track or if they need to be passed manually instead")
         return [{}]
     return vid_info["chapters"]
 
 
-def remove_title_prefixes(chapters: list[dict]) -> list[dict]:
+def remove_song_title_prefixes(chapters: list[dict]) -> list[dict]:
+    """Removes prefixes from song titles based on known patterns. Edit corner cases manually or use custom chapters."""
     for idx, chapter in enumerate(chapters, start=1):
-        # TODO: this can be improved, but is tricky as many different conventions exist
+        # add new conventions when they occur, although this will always be error-prone for certain cases (pass
+        # custom_chapters to process_video instead which will skip this function)
         # "01. - title", "01 - title", "1. - title", "1 - title"
         chapter["title"] = re.sub(rf"^0?{idx}\.? - ", "", chapter["title"])
         # "01. title" and "01 title"
@@ -86,6 +92,7 @@ def copy_track_with_md(
     year: str,
     chapter: Optional[dict] = None,
 ) -> None:
+    """Calls the `ffmpeg` CLI with relevant metadata and options."""
     logger.info("Defining metadata and options for ffmpeg")
     md = "-metadata " + " -metadata ".join(
         [

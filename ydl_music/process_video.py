@@ -12,6 +12,7 @@ _ROOT = "D:/Musik"
 
 
 def process_video(vid: str, custom_title: Optional[str] = None, custom_chapters: Optional[list[dict]] = None) -> None:
+    """Process a single video providing the youtube video id and possibly optional overwrites."""
     yt_url = f"https://youtu.be/{vid}"
 
     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -35,7 +36,8 @@ def process_video(vid: str, custom_title: Optional[str] = None, custom_chapters:
         if len(chapters) == 1:
             utils.copy_track_with_md(mp3_inp, album_dir, band, album, album, "01", year)
         else:
-            chapters = utils.remove_title_prefixes(chapters)
+            if custom_chapters is None:
+                chapters = utils.remove_song_title_prefixes(chapters)
             for idx, chapter in enumerate(chapters, start=1):
                 # this should never go into 3 digits and 001 would look stranger than 01
                 track = f"0{idx}" if idx < 10 else f"{idx}"

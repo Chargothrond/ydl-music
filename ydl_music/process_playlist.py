@@ -1,5 +1,6 @@
 import logging
 import sys
+import time
 
 from ydl_music.process_video import process_video
 
@@ -8,9 +9,11 @@ _ROOT = "D:/Musik"
 
 
 def process_playlist(videos: dict) -> None:
+    """Process an entire playlist of videos. A long list can lead to problems as youtube will limit traffic."""
     for vid_id, vid_conf in videos.items():
         logger.info(f"Process video id '{vid_id}'")
         process_video(vid_id, **vid_conf)
+        time.sleep(60)
 
 
 if __name__ == "__main__":
