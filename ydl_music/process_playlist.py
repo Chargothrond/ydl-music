@@ -28,11 +28,12 @@ if __name__ == "__main__":
     dummy_example = {
         "aaaaaaaaaaa": {"custom_title": "band - album (year)"},
         "bbbbbbbbbbb": {
+            # to be read from separate csv's (not supported yet, custom_title and edit_times fit my cases so far)
             "custom_chapters": [
-                # TODO: custom chapers should be read from separate csv's (e.g. as f"{vid_id}_songs.csv")
                 {"start_time": 00, "end_time": 99, "title": "1"},
                 {"start_time": 100, "end_time": 666, "title": "2"},
             ]
         },
+        "ccccccccccc": {"edit_times": True},
     }
     process_playlist(dummy_example)
