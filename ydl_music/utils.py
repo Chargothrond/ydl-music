@@ -67,18 +67,35 @@ def get_chapters(vid_info: dict) -> list[dict]:
     return vid_info["chapters"]
 
 
-def remove_song_title_prefixes(chapters: list[dict]) -> list[dict]:
-    """Removes prefixes from song titles based on known patterns. Edit corner cases manually or use custom chapters."""
+def clean_song_titles(chapters: list[dict]) -> list[dict]:
+    """Cleans song titles based on known patterns. Edit corner cases manually or use custom chapters."""
     for idx, chapter in enumerate(chapters, start=1):
         # add new conventions when they occur, although this will always be error-prone for certain cases (pass
         # custom_chapters to process_video instead which will skip this function)
+        # deal with track number prefixes
         # "01. - title", "01 - title", "1. - title", "1 - title"
         chapter["title"] = re.sub(rf"^0?{idx}\.? - ", "", chapter["title"])
         # "01. title" and "01 title"
         chapter["title"] = re.sub(rf"^0{idx}\.? ", "", chapter["title"])
         # "1. title" (not "1 title" on purpose because sometimes song titles are just numbers)
         chapter["title"] = re.sub(rf"^{idx}\. ", "", chapter["title"])
+        # deal with trailing time stamps in titles (stripping off e.g. 04:20, but also 4:20:00 or 04:20:00)
+        chapter["title"] = re.sub(r" [0-9]?[0-9]?:?[0-9]{2}:[0-9]{2}", "", chapter["title"])
         chapters[idx - 1] = chapter
+    return chapters
+
+
+def edit_times(chapters: list[dict]) -> list[dict]:
+    """Interactive way to modify track times."""
+    # this can be improved, but is less effort than creating a full custom_chapters csv
+    logger.info("Edit track times as required, as integers in seconds (or empty to keep default)")
+    for idx, chapter in enumerate(chapters):
+        for time in ["start_time", "end_time"]:
+            orig_t = chapter[time]
+            user_t = input(f"New {time} (in seconds) instead of '{orig_t}' (empty = use default): ")
+            if len(user_t) > 0:
+                chapter[time] = int(user_t)
+        chapters[idx] = chapter
     return chapters
 
 

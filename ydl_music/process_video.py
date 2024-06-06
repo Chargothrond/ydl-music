@@ -11,7 +11,9 @@ logger = logging.getLogger(__name__)
 _ROOT = "D:/Musik"
 
 
-def process_video(vid: str, custom_title: Optional[str] = None, custom_chapters: Optional[list[dict]] = None) -> None:
+def process_video(
+    vid: str, custom_title: Optional[str] = None, custom_chapters: Optional[list[dict]] = None, edit_times: bool = False
+) -> None:
     """Process a single video providing the youtube video id and possibly optional overwrites."""
     yt_url = f"https://youtu.be/{vid}"
 
@@ -37,7 +39,9 @@ def process_video(vid: str, custom_title: Optional[str] = None, custom_chapters:
             utils.copy_track_with_md(mp3_inp, album_dir, band, album, album, "01", year)
         else:
             if custom_chapters is None:
-                chapters = utils.remove_song_title_prefixes(chapters)
+                chapters = utils.clean_song_titles(chapters)
+            if edit_times:
+                chapters = utils.edit_times(chapters)
             for idx, chapter in enumerate(chapters, start=1):
                 # this should never go into 3 digits and 001 would look stranger than 01
                 track = f"0{idx}" if idx < 10 else f"{idx}"
@@ -54,4 +58,4 @@ if __name__ == "__main__":
     formatter = logging.Formatter("%(asctime)s: [%(levelname)s] [%(name)s] %(message)s", "%Y-%m-%d %H:%M:%S")
     handler.setFormatter(formatter)
     root.addHandler(handler)
-    process_video("aaaaaaaaa")  # , custom_title="Band - Album (year)"
+    process_video("aaaaaaaaa")  # , custom_title="Band - Album (year)", edit_times=True
