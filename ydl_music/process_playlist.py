@@ -12,7 +12,7 @@ def process_playlist(videos: dict) -> None:
     """Process an entire playlist of videos. A long list can lead to problems as youtube will limit traffic."""
     for vid_id, vid_conf in videos.items():
         logger.info(f"Process video id '{vid_id}'")
-        process_video(vid_id, **vid_conf)
+        process_video(vid_id, **vid_conf, open_folder=False)
         time.sleep(60)
 
 
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     formatter = logging.Formatter("%(asctime)s: [%(levelname)s] [%(name)s] %(message)s", "%Y-%m-%d %H:%M:%S")
     handler.setFormatter(formatter)
     root.addHandler(handler)
-    # TODO: define input + logic to automate this (without custom chapters initially)
+    # TODO: read from file and consider DQ checks
     dummy_example = {
         "aaaaaaaaaaa": {"custom_title": "band - album (year)"},
         "bbbbbbbbbbb": {

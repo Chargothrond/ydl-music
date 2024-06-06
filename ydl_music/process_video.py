@@ -12,7 +12,11 @@ _ROOT = "D:/Musik"
 
 
 def process_video(
-    vid: str, custom_title: Optional[str] = None, custom_chapters: Optional[list[dict]] = None, edit_times: bool = False
+    vid: str,
+    custom_title: Optional[str] = None,
+    custom_chapters: Optional[list[dict]] = None,
+    edit_times: bool = False,
+    open_folder: bool = True,
 ) -> None:
     """Process a single video providing the youtube video id and possibly optional overwrites."""
     yt_url = f"https://youtu.be/{vid}"
@@ -33,7 +37,8 @@ def process_video(
         logger.info(f"Creating folders for band '{band}' and album '{album}'")
         band_dir = utils.add_folder_if_needed(Path(_ROOT), band)
         album_dir = utils.add_folder_if_needed(band_dir, album)
-        os.startfile(album_dir)
+        if open_folder:
+            os.startfile(album_dir)
 
         if len(chapters) == 1:
             utils.copy_track_with_md(mp3_inp, album_dir, band, album, album, "01", year)
