@@ -3,6 +3,7 @@ import logging
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -18,6 +19,16 @@ _DEFAULTS = {
 }
 
 
+def setup_logging():
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.INFO)
+    formatter = logging.Formatter("%(asctime)s: [%(levelname)s] [%(name)s] %(message)s", "%Y-%m-%d %H:%M:%S")
+    handler.setFormatter(formatter)
+    root.addHandler(handler)
+
+
 def download_video(yt_url: str, tmp_dir: str) -> Tuple[Path, dict]:
     """Downloads a video using the `youtube-dl` CLI. Also downloads a json file containing relevant metadata."""
     tmp_path = Path(tmp_dir)
@@ -29,7 +40,7 @@ def download_video(yt_url: str, tmp_dir: str) -> Tuple[Path, dict]:
     logger.info(f"Finished downloading {yt_url}")
     mp3_fp = tmp_path / f"{tf}.mp3"
     json_fp = tmp_path / f"{tf}.info.json"
-    logger.info(f"Get metadata information from {json_fp}")
+    logger.debug(f"Get metadata information from {json_fp}")
     with open(json_fp) as jf:
         info_dict = {k: v for k, v in json.load(jf).items() if k in _DEFAULTS["info_keys"]}
     return mp3_fp, info_dict
@@ -37,7 +48,7 @@ def download_video(yt_url: str, tmp_dir: str) -> Tuple[Path, dict]:
 
 def parse_title(title: str) -> tuple[str, str, str]:
     """Parse information from the video title. Expects format `band - album (year)`. Asks for manual input if needed."""
-    logger.info(f"Parse (band, album, year) from {title}")
+    logger.debug(f"Parse (band, album, year) from {title}")
     regex = r"^(.*)" + _DEFAULTS["sep_band"] + r"(.*)" + _DEFAULTS["sep_album"] + r".*([0-9]{4}).*$"  # type: ignore
     res = re.findall(regex, title)
     if len(res) == 0:
@@ -54,13 +65,14 @@ def add_folder_if_needed(root: Path, folder_name: str) -> Path:
     """Creates new folders per band or album if required."""
     dir_to_create = Path(root) / folder_name
     if not dir_to_create.exists():
-        logger.info(f"There is no folder for band / album '{dir_to_create.parts[-1]}' yet, creating it")
+        logger.warning(f"Creating new folder for: '{dir_to_create.parts[-1]}'")
         os.mkdir(dir_to_create)
     return dir_to_create
 
 
 def get_chapters(vid_info: dict) -> list[dict]:
     """Gets chapter information from the video if it exists. Otherwise returns a list with one empty dictionary."""
+    logger.debug("Get chapters / track information")
     if "chapters" not in vid_info.keys():
         logger.warning("Video lacks chapters, check if just one track or if they need to be passed manually instead")
         return [{}]
@@ -110,7 +122,7 @@ def copy_track_with_md(
     chapter: Optional[dict] = None,
 ) -> None:
     """Calls the `ffmpeg` CLI with relevant metadata and options."""
-    logger.info("Defining metadata and options for ffmpeg")
+    logger.debug("Defining metadata and options for ffmpeg")
     md = "-metadata " + " -metadata ".join(
         [
             f'{k}="{v}"'
@@ -130,6 +142,6 @@ def copy_track_with_md(
     if target_mp3.exists():
         raise FileExistsError(f"{target_mp3} already exists!")
     cmd = f'ffmpeg -i {mp3_inp} {md} {segment} -codec copy "{target_mp3}" {_DEFAULTS["ffmpeg_opts"]}'
-    logger.info(f"Running ffmpeg: {cmd}")
+    logger.debug(f"Running ffmpeg: {cmd}")
     subprocess.run(cmd, shell=True)
     logger.info(f"Finished saving track '{title}'")

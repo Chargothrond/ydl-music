@@ -1,6 +1,5 @@
 import logging
 import os
-import sys
 import tempfile
 from pathlib import Path
 from typing import Optional
@@ -20,21 +19,20 @@ def process_video(
 ) -> None:
     """Process a single video providing the youtube video id and possibly optional overwrites."""
     yt_url = f"https://youtu.be/{vid}"
+    logger.info(f"Download {yt_url}")
 
     with tempfile.TemporaryDirectory() as tmp_dir:
-        logger.info(f"Download {yt_url}")
         mp3_inp, vid_info = utils.download_video(yt_url, tmp_dir)
         band, album, year = utils.parse_title(custom_title if custom_title else vid_info["title"])
 
         if custom_chapters:
-            logger.info("Using custom chapters instead of derived ones")
+            logger.debug("Using custom chapters instead of derived ones")
             # consider DQ checking this in a dedicated function to read such information from a csv
             chapters = custom_chapters
         else:
-            logger.info("Get chapters / track information")
             chapters = utils.get_chapters(vid_info)
 
-        logger.info(f"Creating folders for band '{band}' and album '{album}'")
+        logger.info(f"Saving into folders for band '{band}' and album '{album}'")
         band_dir = utils.add_folder_if_needed(Path(_ROOT), band)
         album_dir = utils.add_folder_if_needed(band_dir, album)
         if open_folder:
@@ -52,15 +50,9 @@ def process_video(
                 track = f"0{idx}" if idx < 10 else f"{idx}"
                 utils.copy_track_with_md(mp3_inp, album_dir, band, album, chapter["title"], track, year, chapter)
 
-    logger.info("Done")
+    logger.info(f"Finished processing {yt_url}")
 
 
 if __name__ == "__main__":
-    root = logging.getLogger()
-    root.setLevel(logging.INFO)
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setLevel(logging.INFO)
-    formatter = logging.Formatter("%(asctime)s: [%(levelname)s] [%(name)s] %(message)s", "%Y-%m-%d %H:%M:%S")
-    handler.setFormatter(formatter)
-    root.addHandler(handler)
+    utils.setup_logging()
     process_video("aaaaaaaaa")  # , custom_title="Band - Album (year)", edit_times=True
