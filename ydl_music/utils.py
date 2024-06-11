@@ -67,7 +67,7 @@ def add_folder_if_needed(root: Path, folder_name: str) -> Path:
     """Creates new folders per band or album if required."""
     dir_to_create = Path(root) / folder_name
     if not dir_to_create.exists():
-        logger.warning(f"Creating new folder for: '{dir_to_create.parts[-1]}'")
+        logger.warning(f"Creating new folder: '{dir_to_create.parts[-1]}'")
         os.mkdir(dir_to_create)
     return dir_to_create
 
