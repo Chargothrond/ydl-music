@@ -41,7 +41,7 @@ def process_video(
         if len(chapters) == 1:
             utils.copy_track_with_md(mp3_inp, album_dir, band, album, album, "01", year)
         else:
-            if custom_chapters is None:
+            if not custom_chapters:
                 chapters = utils.clean_song_titles(chapters)
             if edit_times:
                 chapters = utils.edit_times(chapters)
