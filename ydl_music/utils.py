@@ -46,7 +46,7 @@ def download_video(yt_url: str, tmp_dir: str) -> Tuple[Path, dict]:
     return mp3_fp, info_dict
 
 
-def parse_title(title: str) -> tuple[str, str, str]:
+def parse_title(title: str) -> tuple[str, ...]:
     """Parse information from the video title. Expects format `band - album (year)`. Asks for manual input if needed."""
     logger.debug(f"Parse (band, album, year) from {title}")
     regex = r"^(.*)" + _DEFAULTS["sep_band"] + r"(.*)" + _DEFAULTS["sep_album"] + r".*([0-9]{4}).*$"  # type: ignore
@@ -58,7 +58,9 @@ def parse_title(title: str) -> tuple[str, str, str]:
         if len(res) == 0:
             raise ValueError("Wrong input, try again from start")
         return res[0]
-    return res[0]
+    # sometimes these youtube metadata fields have trailing whitespaces
+    res = tuple([re.sub(r"\s+$", "", info) for info in res[0]])
+    return res
 
 
 def add_folder_if_needed(root: Path, folder_name: str) -> Path:
