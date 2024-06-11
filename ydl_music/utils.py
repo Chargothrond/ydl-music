@@ -87,6 +87,8 @@ def clean_song_titles(chapters: list[dict]) -> list[dict]:
         # add new conventions when they occur, although this will always be error-prone for certain cases (pass
         # custom_chapters to process_video instead which will skip this function)
         # deal with track number prefixes
+        # "1) title", "1.) title"
+        chapter["title"] = re.sub(rf"^0?{idx}\.?\) ", "", chapter["title"])
         # "01. - title", "01 - title", "1. - title", "1 - title"
         chapter["title"] = re.sub(rf"^0?{idx}\.? - ", "", chapter["title"])
         # "01. title" and "01 title"
