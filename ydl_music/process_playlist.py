@@ -21,6 +21,8 @@ def process_playlist(inp: Path) -> None:
     for index, row in videos.iterrows():
         vid_id = row["yid"]
         vid_conf = dict(row[process_video_option_cols])
+        if row["custom_chapters"]:
+            vid_conf["custom_chapters"] = eval(row["custom_chapters"])
         vid_conf["edit_times"] = bool(row["edit_times"])
         process_video(vid_id, **vid_conf, open_folder=False)
         time.sleep(60)
