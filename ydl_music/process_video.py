@@ -58,4 +58,4 @@ if __name__ == "__main__":
     #     {'start_time': 00, 'end_time': 99, 'title': '1'},
     #     {'start_time': 100, 'end_time': 666, 'title': '2'},
     # ]
-    process_video("aaaaaaaaa")  # , custom_title="Band - Album (year)", custom_chapters = cc_ex, edit_times=True
+    process_video("aaaaaaaaa")  # , custom_title="Band - Album (year)", custom_chapters = cc_ex, edit_times=False
