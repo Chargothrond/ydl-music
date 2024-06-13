@@ -104,6 +104,8 @@ def clean_song_titles(chapters: list[dict]) -> list[dict]:
 def edit_times(chapters: list[dict]) -> list[dict]:
     """Interactive way to modify track times."""
     # this can be improved, but is less effort than creating a full custom_chapters csv
+    # i considered not asking for end time of a track and then the start time of the next, but there are cases where
+    # one might prefer leaving gaps (e.g. pauses during tracks on live albums / concerts)
     logger.info("Edit track times as required, as integers in seconds (or empty to keep default)")
     for idx, chapter in enumerate(chapters):
         for time in ["start_time", "end_time"]:
