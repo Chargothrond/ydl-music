@@ -26,7 +26,6 @@ def process_video(
         band, album, year = utils.parse_title(custom_title if custom_title else vid_info["title"])
 
         if custom_chapters:
-            logger.warning("Using custom chapters instead of derived ones which still requires a direct dict")
             # this should instead be read from a separate csv file, but isn't implemented yet
             chapters = custom_chapters
         else:
@@ -55,8 +54,8 @@ def process_video(
 
 if __name__ == "__main__":
     utils.setup_logging()
-    # custom_chapters_example = [
+    # cc_ex = [
     #     {'start_time': 00, 'end_time': 99, 'title': '1'},
     #     {'start_time': 100, 'end_time': 666, 'title': '2'},
     # ]
-    process_video("aaaaaaaaa")  # , custom_title="Band - Album (year)", edit_times=True
+    process_video("aaaaaaaaa")  # , custom_title="Band - Album (year)", custom_chapters = cc_ex, edit_times=True
