@@ -34,8 +34,10 @@ def download_video(yt_url: str, tmp_dir: str) -> Tuple[Path, dict]:
     tmp_path = Path(tmp_dir)
     tf = "tmp_file"
     target = rf"{tmp_path}\{tf}.%(ext)s"
+    # hopefully temporary workaround (see https://github.com/ytdl-org/youtube-dl/issues/32905#issuecomment-2282923081)
+    ua = '--user-agent "Mozilla/5.0 (Android 14; Mobile; rv:115.0) Gecko/115.0 Firefox/115.0"'
     # wanted to use the Python interface directly, but getting info_dict is more cumbersome than with the CLI
-    cmd = f'youtube-dl {yt_url} -o "{target}" -x --audio-format mp3 --audio-quality 192K --write-info-json'
+    cmd = f'youtube-dl {yt_url} -o "{target}" -x --audio-format mp3 --audio-quality 192K --write-info-json {ua}'
     subprocess.run(cmd, shell=True)
     logger.info(f"Finished downloading {yt_url}")
     mp3_fp = tmp_path / f"{tf}.mp3"
