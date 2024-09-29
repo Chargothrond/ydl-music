@@ -1,5 +1,5 @@
 pip-tools
-youtube_dl
+youtube_dl  # update local checkout to latest master since they don't seem to be doing new proper releases
 isort
 black
 flake8
