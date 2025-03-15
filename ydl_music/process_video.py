@@ -55,7 +55,7 @@ def process_video(
 if __name__ == "__main__":
     utils.setup_logging()
     # cc_ex = [
-    #     {'start_time': 00, 'end_time': 99, 'title': '1'},
-    #     {'start_time': 100, 'end_time': 666, 'title': '2'},
+    #     {'start_time': 00, 'end_time': 99, 'title': 'Intro'},
+    #     {'start_time': 100, 'end_time': 666, 'title': 'Some Song'},
     # ]
     process_video("aaaaaaaaa")  # , custom_title="Band - Album (year)", custom_chapters = cc_ex, edit_times=False
